@@ -1,0 +1,5 @@
+/docs
+/tests
+sources/__pycache__
+sources/__init__.py
+setup.py
