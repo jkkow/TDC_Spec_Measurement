@@ -40,6 +40,12 @@ class TDC_SpecMeasure(object):
         # Core role of this __init_() function is intializing the graph configuration.
         self.ax = ax  # get 'ax' object
         self.xy_data = data  # get a function that returns measured data values as initial parameter
+
+        self.ax.set_title("TDC Examination", fontsize=15)
+        self.ax.set_xlabel("Dial Ticks", fontsize=13, labelpad=12)
+        self.ax.set_ylabel("Power(A.U.)", fontsize=13, labelpad=12)
+        self.ax.set_yticklabels([])
+
         self.xmin_init, self.xmax_init = 0, 10  # set initial xmin, xmax for plot range
         self.ymin_init, self.ymax_init = -0.2, 1.1  # set initial ymin, ymax for plot range
         # axes range setting
@@ -49,8 +55,11 @@ class TDC_SpecMeasure(object):
         self.x_list = []    # make empty list for x data
         self.y1_list, self.y2_list = [], []  # make emepty list for y1, y2 data
 
-        self.line1, = self.ax.plot(self.x_list, self.y1_list, '-o')   # plot line1 for data y1
-        self.line2, = self.ax.plot(self.x_list, self.y2_list, '-x')   # plot line2 for data y2
+        self.line1, = self.ax.plot(self.x_list, self.y1_list, '-o',
+                                   label="Ch_1")   # plot line1 for data y1
+        self.line2, = self.ax.plot(self.x_list, self.y2_list, '-x',
+                                   label="Ch_2")   # plot line2 for data y2
+        self.ax.legend(loc=0, fontsize=12)
 
     def __call__(self, event):
         # This magic method is called whenever the key press event occured.
@@ -62,7 +71,7 @@ class TDC_SpecMeasure(object):
         elif event.key == "d":
             try:
                 # remove datapoint from the list
-                self.xy_data.i -= 1
+                self.xy_data.x -= 1
                 self.x_list.pop(-1)
                 self.y1_list.pop(-1)
                 self.y2_list.pop(-1)
@@ -108,7 +117,7 @@ class TDC_SpecMeasure(object):
 
     def PrintOut(self):
         self.filename = input("Input file name without file extencsion: ") + ".xlsx"
-        wb = xlw.Workbook("C:/Users/JKKO/Dropbox/Projects/TDC_spec/docs/{}".format(self.filename))
+        wb = xlw.Workbook("{}".format(self.filename))
         ws = wb.add_worksheet('TDC_mesured result')
         row, col = [0, 0]
         for i in range(len(self.x_list)):
@@ -126,8 +135,8 @@ if __name__ == '__main__':
     arduino = my_serial('Arduino', 9600)
     time.sleep(2)
 
-    data = XY_DataGen()
-    fig, ax = plt.subplots()
+    data = XY_DataGen(arduino.serialport)
+    fig, ax = plt.subplots(figsize=(9, 6))
     tdc_measure = TDC_SpecMeasure(ax, data)
     fig.canvas.mpl_connect("key_press_event", tdc_measure)
     plt.show()
