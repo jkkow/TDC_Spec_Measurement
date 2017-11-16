@@ -83,6 +83,7 @@ class TDC_SpecMeasure(object):
                 self.line2.figure.canvas.draw()
             except IndexError:
                 print("Empty list")
+                self.xy_data.x += 1  # make value x to zero
 
         else:
             # get current xy plot range. This will be used to update plot range.
