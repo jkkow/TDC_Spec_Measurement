@@ -1,6 +1,8 @@
 """
-Two channel powermerter로 부터의 측정값을 저장하고
-key_press_event가 있을 때마다 plot을 업데이트 해주는 모듈
+This class reads measured data from device and return the data set whenever it is called.
+The data comes from Aruduino Uno board that connected
+to Dual channel powermeter. The Aruduino emits two line of data at a
+time, one line for chennel 1 and the other for channel 2.
 
 Author: jkkow
 Created: 2017-11-08T02:46:52
@@ -11,15 +13,11 @@ import numpy as np
 
 
 class get_dataGen(object):
-    # This class reads measured data from device and return the data set whenever it is called.
-    # In this project, the data comes from Aruduino Uno board that connected
-    # to Dual channel powermeter. The Aruduino emits two line of data at a
-    # time, one line for chennel 1 and the other for channel 2.
 
     def __init__(self, device):
         # get `serial` instance from device that is connected via serial
-        # communication. If you use customized `FindSerial` class, make sure the
-        # device instace as like `aruino.serialport`.
+        # communication. If you use customized `FindSerial` class, make sure to use the
+        # device instace as like `deviceintstace.serialport`.
         self.device = device
         self.x = 0  # set start value as zero for mesurement steps
 
@@ -42,7 +40,7 @@ class TDC_SpecMeasure(object):
         self.ax.set_title("TDC Examination", fontsize=15)
         self.ax.set_xlabel("Dial Ticks", fontsize=13, labelpad=12)
         self.ax.set_ylabel("Power(A.U.)", fontsize=13, labelpad=12)
-        self.ax.set_yticklabels([])
+        # self.ax.set_yticklabels([])
 
         self.xmin_init, self.xmax_init = 0, 10  # set initial xmin, xmax for plot range
         self.ymin_init, self.ymax_init = -0.2, 1.1  # set initial ymin, ymax for plot range
@@ -59,7 +57,7 @@ class TDC_SpecMeasure(object):
         # initila plot line2 for data y2
         self.line2, = self.ax.plot(self.x_list, self.y2_list, '-x', label="Ch_2")
         # initial plotline3 for summation result of y1 and y2
-        self.line3, = self.ax.plot(self.x_list, self.sum_arr, '-', label="Total")
+        self.line3, = self.ax.plot(self.x_list, self.sum_arr, '-d', label="Total")
         self.ax.legend(loc=0, fontsize=12)
 
     def __call__(self, event):
@@ -71,7 +69,7 @@ class TDC_SpecMeasure(object):
             print("\n y2 data list: {}\n".format(self.y2_list))
             print("\n summed data: {}\n".format(self.sum_arr))
 
-        elif event.key == "d":
+        elif event.key == "d":  # set 'd' key to delete a recently added data
             try:
                 # remove datapoint from the list
                 self.get_data.x -= 1  # one step back of index x
@@ -80,6 +78,8 @@ class TDC_SpecMeasure(object):
                 self.y1_list.pop(-1)
                 self.y2_list.pop(-1)
                 self.sum_arr = self.sum_arr[:-1]
+
+                self.Check_PlotRange(event.key)
 
                 # update plot
                 self.line1.set_data(self.x_list, self.y1_list)
@@ -90,11 +90,6 @@ class TDC_SpecMeasure(object):
             except IndexError:
                 print("Empty list")
                 self.get_data.x += 1  # reset x to zero
-
-        elif event.key == '-':
-            ymin, ymax = self.ax.get_ylim()
-            self.ax.set_ylim(ymin, ymax * 0.8)
-            self.ax.figure.canvas.draw()
 
         else:
             # get x,y data that generated from `get_data()`
@@ -108,13 +103,45 @@ class TDC_SpecMeasure(object):
             self.sum_arr = np.append(self.sum_arr, self.sum)
 
             # Check whether data range exceed the plot range. If so, change the range.
-            self.Check_PlotRange()
+            self.Check_PlotRange(event.key)
 
             # update plot
             self.line1.set_data(self.x_list, self.y1_list)
             self.line2.set_data(self.x_list, self.y2_list)
             self.line3.set_data(self.x_list, self.sum_arr)
             self.ax.figure.canvas.draw()
+
+    def Check_PlotRange(self, event_key):
+
+        self.xmin, self.xmax = self.ax.get_xlim()
+        self.ymin, self.ymax = self.ax.get_ylim()
+
+        if event_key == 'd':
+            maxval = max([max(self.y1_list), max(self.y2_list), max(self.sum_arr)])
+            minval = min([min(self.y1_list), min(self.y2_list), min(self.sum_arr)])
+
+            if (self.ymax - maxval) > 0.5 * maxval:
+                self.ax.set_ylim(self.ymin, maxval * 1.5)
+                print("ylim_top truncated!")
+            elif abs(self.ymin - minval) > 0.5 * abs(minval):
+                self.ax.set_ylim(minval * 1.5, self.ymax)
+
+        else:
+            topval = max([self.y1, self.y2, self.sum])  # maximum value among the data
+            botval = min([self.y1, self.y2, self.sum])  # minimum value among thd data
+
+            if self.x > self.xmax:
+                self.ax.set_xlim(self.xmin, self.x + 20)
+            elif topval > self.ymax:
+                if botval < self.ymin:  # hit the top and bottom
+                    self.ax.set_ylim(botval - 0.2 * abs(botval), topval * 1.1)
+                else:  # hit the top only
+                    self.ax.set_ylim(self.ymin, topval * 1.1)
+            elif botval < self.ymin:
+                if topval > self.ymax:  # hit the bottom and top
+                    self.ax.set_ylim(botval - 0.2 * abs(botval), topval * 1.1)
+                else:  # hit the bottom only
+                    self.ax.set_ylim(botval - 0.2 * abs(botval), self.ymax)
 
     def PrintOut(self):
         self.filename = input("Input file name without file extencsion: ") + ".xlsx"
@@ -126,25 +153,6 @@ class TDC_SpecMeasure(object):
             ws.write(row, col + 1, self.y2_list[i])
             row += 1
         wb.close()
-
-    def Check_PlotRange(self):
-        self.xmin, self.xmax = self.ax.get_xlim()
-        self.ymin, self.ymax = self.ax.get_ylim()
-
-        if self.x > self.xmax:
-            self.ax.set_xlim(self.xmin, self.x + 20)
-        elif self.y1 > self.ymax:
-            self.ax.set_ylim(self.ymin, self.y1 * 1.1)
-        elif self.y2 > self.ymax:
-            self.ax.set_ylim(self.ymin, self.y2 * 1.1)
-        elif self.sum > self.ymax:
-            self.ax.set_ylim(self.ymin, self.sum * 1.1)
-        elif self.y1 < self.ymin:
-            self.ax.set_ylim(self.y1 - 0.2 * abs(self.y1), self.ymax)
-        elif self.y2 < self.ymin:
-            self.ax.set_ylim(self.y2 - 0.2 * abs(self.y2), self.ymax)
-        elif self.sum < self.ymin:
-            self.ax.set_ylim(self.sum - 0.2 * abs(self.sum), self.ymax)
 
 
 if __name__ == '__main__':
