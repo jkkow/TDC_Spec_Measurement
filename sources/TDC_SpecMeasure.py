@@ -121,10 +121,10 @@ class TDC_SpecMeasure(object):
             minval = min([min(self.y1_list), min(self.y2_list), min(self.sum_arr)])
 
             if (self.ymax - maxval) > 0.5 * maxval:
-                self.ax.set_ylim(self.ymin, maxval * 1.5)
-                print("ylim_top truncated!")
-            elif abs(self.ymin - minval) > 0.5 * abs(minval):
-                self.ax.set_ylim(minval * 1.5, self.ymax)
+                if abs(self.ymin - minval) > 0.5 * abs(minval):
+                    self.ax.set_ylim(minval * 1.5, maxval * 1.5)
+                elif abs(self.ymax - maxval) > 0.5 * abs(maxval):
+                    self.ax.set_ylim(self.ymin, maxval * 1.5)
 
         else:
             topval = max([self.y1, self.y2, self.sum])  # maximum value among the data
