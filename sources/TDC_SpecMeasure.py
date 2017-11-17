@@ -115,33 +115,29 @@ class TDC_SpecMeasure(object):
 
         self.xmin, self.xmax = self.ax.get_xlim()
         self.ymin, self.ymax = self.ax.get_ylim()
+        # maximum value among the data
+        topval = max([max(self.y1_list), max(self.y2_list), max(self.sum_arr)])
+        # minimum value among thd data
+        botval = min([min(self.y1_list), min(self.y2_list), min(self.sum_arr)])
 
-        if event_key == 'd':
-            maxval = max([max(self.y1_list), max(self.y2_list), max(self.sum_arr)])
-            minval = min([min(self.y1_list), min(self.y2_list), min(self.sum_arr)])
+        if event_key == 'd':  # the case when 'd' key pressed
+            print(abs(botval - self.ymin) > 0.1 * botval)
+            if (self.ymax - topval) > 0.1 * abs(topval):
+                self.ax.set_ylim(self.ymin, topval + 0.2 * abs(topval))
+                self.ymin, self.ymax = self.ax.get_ylim()
+            if (botval - self.ymin) > 0.1 * botval:
+                self.ax.set_ylim(botval - 0.1 * abs(botval), self.ymax)
+                self.ymin, self.ymax = self.ax.get_ylim()
 
-            if (self.ymax - maxval) > 0.5 * maxval:
-                if abs(self.ymin - minval) > 0.5 * abs(minval):
-                    self.ax.set_ylim(minval * 1.5, maxval * 1.5)
-                elif abs(self.ymax - maxval) > 0.5 * abs(maxval):
-                    self.ax.set_ylim(self.ymin, maxval * 1.5)
-
-        else:
-            topval = max([self.y1, self.y2, self.sum])  # maximum value among the data
-            botval = min([self.y1, self.y2, self.sum])  # minimum value among thd data
-
+        else:  # the case when a key pressed
             if self.x > self.xmax:
-                self.ax.set_xlim(self.xmin, self.x + 20)
-            elif topval > self.ymax:
-                if botval < self.ymin:  # hit the top and bottom
-                    self.ax.set_ylim(botval - 0.2 * abs(botval), topval * 1.1)
-                else:  # hit the top only
-                    self.ax.set_ylim(self.ymin, topval * 1.1)
-            elif botval < self.ymin:
-                if topval > self.ymax:  # hit the bottom and top
-                    self.ax.set_ylim(botval - 0.2 * abs(botval), topval * 1.1)
-                else:  # hit the bottom only
-                    self.ax.set_ylim(botval - 0.2 * abs(botval), self.ymax)
+                self.ax.set_xlim(self.xmin, self.x + 50)
+            if topval > self.ymax:
+                self.ax.set_ylim(self.ymin, topval * 1.2)
+                self.ymin, self.ymax = self.ax.get_ylim()
+            if botval < self.ymin:
+                self.ax.set_ylim(botval - 0.2 * abs(botval), self.ymax)
+                self.ymin, self.ymax = self.ax.get_ylim()
 
     def PrintOut(self):
         self.filename = input("Input file name without file extencsion: ") + ".xlsx"
