@@ -69,8 +69,9 @@ class TDC_SpecMeasure(object):
             print("\n y2 data list: {}\n".format(self.y2_list))
             print("\n summed data: {}\n".format(self.sum_arr))
 
-        elif event.key == "d":  # set 'd' key to delete a recently added data
+        elif event.key == 'backspace' or event.key == 'd' or event.key == 'left':
             try:
+                print(event.key)
                 # remove datapoint from the list
                 self.get_data.x -= 1  # one step back of index x
                 # pop out last value in the array
@@ -79,7 +80,7 @@ class TDC_SpecMeasure(object):
                 self.y2_list.pop(-1)
                 self.sum_arr = self.sum_arr[:-1]
 
-                self.Check_PlotRange(event.key)
+                self.Check_PlotRange('deliting')
 
                 # update plot
                 self.line1.set_data(self.x_list, self.y1_list)
@@ -91,8 +92,9 @@ class TDC_SpecMeasure(object):
                 print("Empty list")
                 self.get_data.x += 1  # reset x to zero
 
-        else:
+        elif event.key == ' ' or event.key == 'enter' or event.key == 'right':
             # get x,y data that generated from `get_data()`
+            print("The key '{}' is pressed".format(event.key))
             self.x, self.y1, self.y2, self.sum = self.get_data()
 
             # update data list
@@ -103,7 +105,7 @@ class TDC_SpecMeasure(object):
             self.sum_arr = np.append(self.sum_arr, self.sum)
 
             # Check whether data range exceed the plot range. If so, change the range.
-            self.Check_PlotRange(event.key)
+            self.Check_PlotRange('adding')
 
             # update plot
             self.line1.set_data(self.x_list, self.y1_list)
@@ -111,7 +113,11 @@ class TDC_SpecMeasure(object):
             self.line3.set_data(self.x_list, self.sum_arr)
             self.ax.figure.canvas.draw()
 
-    def Check_PlotRange(self, event_key):
+        else:
+            print("\n\tYou've press '{}' key.".format(event.key))
+            print("\tTo add point: type 'enter' or 'spacebar' or 'right'.\n\tTo delete point: type 'd' or 'backspace' or 'left'")
+
+    def Check_PlotRange(self, plot_mode):
 
         self.xmin, self.xmax = self.ax.get_xlim()
         self.ymin, self.ymax = self.ax.get_ylim()
@@ -120,8 +126,7 @@ class TDC_SpecMeasure(object):
         # minimum value among thd data
         botval = min([min(self.y1_list), min(self.y2_list), min(self.sum_arr)])
 
-        if event_key == 'd':  # the case when 'd' key pressed
-            print(abs(botval - self.ymin) > 0.1 * botval)
+        if plot_mode == "deliting":  # the case when 'd' key pressed
             if (self.ymax - topval) > 0.1 * abs(topval):
                 self.ax.set_ylim(self.ymin, topval + 0.2 * abs(topval))
                 self.ymin, self.ymax = self.ax.get_ylim()
@@ -129,7 +134,7 @@ class TDC_SpecMeasure(object):
                 self.ax.set_ylim(botval - 0.1 * abs(botval), self.ymax)
                 self.ymin, self.ymax = self.ax.get_ylim()
 
-        else:  # the case when a key pressed
+        elif plot_mode == "adding":  # the case when a key pressed
             if self.x > self.xmax:
                 self.ax.set_xlim(self.xmin, self.x + 50)
             if topval > self.ymax:
