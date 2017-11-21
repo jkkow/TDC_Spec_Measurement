@@ -71,7 +71,7 @@ class TDC_SpecMeasure(object):
 
         elif event.key == 'backspace' or event.key == 'd' or event.key == 'left':
             try:
-                print("Dial ticks: {},\tpoint deleted".format(self.get_data.x))
+                print("Dial ticks: %3s\tpoint deleted" % self.get_data.x)
                 # remove datapoint from the list
                 self.get_data.x -= 1  # one step back of index x
                 # pop out last value in the array
@@ -94,7 +94,7 @@ class TDC_SpecMeasure(object):
 
         elif event.key == ' ' or event.key == 'enter' or event.key == 'right':
             # get x,y data that generated from `get_data()`
-            print("Dial ticks: {},\tpoint added".format(self.get_data.x))
+            print("Dial ticks: %3s\tpoint added" % self.get_data.x)
             self.x, self.y1, self.y2, self.sum = self.get_data()
 
             # update data list
@@ -127,22 +127,22 @@ class TDC_SpecMeasure(object):
         botval = min([min(self.y1_list), min(self.y2_list), min(self.sum_arr)])
 
         if plot_mode == "deliting":  # the case when 'd' key pressed
-            if (self.ymax - topval) > 0.1 * abs(topval):
+            if (self.ymax - topval) >= 0.1 * abs(topval):
                 self.ax.set_ylim(self.ymin, topval + 0.2 * abs(topval))
                 self.ymin, self.ymax = self.ax.get_ylim()
-            if botval > self.ymin_init:
-                pass
-            elif (botval - self.ymin) > 0.1 * botval:
+            if botval >= self.ymin_init:
+                self.ax.set_ylim(self.ymin_init, self.ymax)
+            elif botval < self.ymin_init and (botval - self.ymin) >= 0.1 * botval:
                 self.ax.set_ylim(botval - 0.1 * abs(botval), self.ymax)
                 self.ymin, self.ymax = self.ax.get_ylim()
 
         elif plot_mode == "adding":  # the case when a key pressed
-            if self.x > self.xmax:
+            if self.x >= self.xmax:
                 self.ax.set_xlim(self.xmin, self.x + 50)
-            if topval > self.ymax:
+            if topval >= self.ymax:
                 self.ax.set_ylim(self.ymin, topval * 1.2)
                 self.ymin, self.ymax = self.ax.get_ylim()
-            if botval < self.ymin:
+            if botval <= self.ymin:
                 self.ax.set_ylim(botval - 0.2 * abs(botval), self.ymax)
                 self.ymin, self.ymax = self.ax.get_ylim()
 
