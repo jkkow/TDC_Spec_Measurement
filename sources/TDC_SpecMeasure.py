@@ -71,7 +71,7 @@ class TDC_SpecMeasure(object):
 
         elif event.key == 'backspace' or event.key == 'd' or event.key == 'left':
             try:
-                print(event.key)
+                print("Dial ticks: {},\tpoint deleted".format(self.get_data.x))
                 # remove datapoint from the list
                 self.get_data.x -= 1  # one step back of index x
                 # pop out last value in the array
@@ -94,7 +94,7 @@ class TDC_SpecMeasure(object):
 
         elif event.key == ' ' or event.key == 'enter' or event.key == 'right':
             # get x,y data that generated from `get_data()`
-            print("The key '{}' is pressed".format(event.key))
+            print("Dial ticks: {},\tpoint added".format(self.get_data.x))
             self.x, self.y1, self.y2, self.sum = self.get_data()
 
             # update data list
@@ -115,7 +115,7 @@ class TDC_SpecMeasure(object):
 
         else:
             print("\n\tYou've press '{}' key.".format(event.key))
-            print("\tTo add point: type 'enter' or 'spacebar' or 'right'.\n\tTo delete point: type 'd' or 'backspace' or 'left'")
+            print("\tTo add point: type 'enter' or 'spacebar' or 'right'.\n\tTo delete point: type 'd' or 'backspace' or 'left'\n")
 
     def Check_PlotRange(self, plot_mode):
 
@@ -130,7 +130,9 @@ class TDC_SpecMeasure(object):
             if (self.ymax - topval) > 0.1 * abs(topval):
                 self.ax.set_ylim(self.ymin, topval + 0.2 * abs(topval))
                 self.ymin, self.ymax = self.ax.get_ylim()
-            if (botval - self.ymin) > 0.1 * botval:
+            if botval > self.ymin_init:
+                pass
+            elif (botval - self.ymin) > 0.1 * botval:
                 self.ax.set_ylim(botval - 0.1 * abs(botval), self.ymax)
                 self.ymin, self.ymax = self.ax.get_ylim()
 
